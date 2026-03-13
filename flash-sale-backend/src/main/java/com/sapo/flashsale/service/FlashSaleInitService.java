@@ -11,7 +11,9 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FlashSaleInitService {
@@ -38,8 +40,9 @@ public class FlashSaleInitService {
             productRepository.findActiveSaleProducts().forEach(product -> {
                 String key = stockKeyPrefix + product.getId();
                 redisTemplate.opsForValue().set(key, String.valueOf(product.getStock()));
+                log.debug("Synced stock for product {}: {}", product.getId(), product.getStock());
             });
-            System.out.println("Flash Sale stock synced to Redis");
+            log.info("Flash Sale stock successfully synced to Redis during application startup");
         };
     }
 }
