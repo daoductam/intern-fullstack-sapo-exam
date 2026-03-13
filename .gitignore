@@ -1,0 +1,42 @@
+# Node.js
+flash-sale-frontend/node_modules/
+flash-sale-frontend/dist/
+flash-sale-frontend/dist-ssr/
+flash-sale-frontend/*.local
+flash-sale-frontend/.env.local
+flash-sale-frontend/.env.development.local
+flash-sale-frontend/.env.test.local
+flash-sale-frontend/.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Java/Spring Boot/Maven
+flash-sale-backend/target/
+flash-sale-backend/pom.xml.tag
+flash-sale-backend/pom.xml.releaseBackup
+flash-sale-backend/pom.xml.versionsBackup
+flash-sale-backend/pom.xml.next
+flash-sale-backend/release.properties
+flash-sale-backend/dependency-reduced-pom.xml
+flash-sale-backend/buildNumber.properties
+flash-sale-backend/.mvn/timing.properties
+flash-sale-backend/.mvn/wrapper/maven-wrapper.jar
+flash-sale-backend/.idea/
+flash-sale-backend/*.iml
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Log files
+*.log
+logs/
+
+# Optional: Antigravity AI assistant cache
+.gemini/
+.antigravity/
