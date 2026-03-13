@@ -9,6 +9,8 @@ import com.sapo.flashsale.entity.Order;
 import com.sapo.flashsale.repository.FlashSaleProductRepository;
 import com.sapo.flashsale.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import com.sapo.flashsale.producer.KafkaOrderProducer;
+import com.sapo.flashsale.event.OrderEvent;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,7 @@ public class FlashSaleServiceImpl implements FlashSaleService {
     private final FlashSaleProductRepository productRepository;
     private final OrderRepository orderRepository;
     private final TransactionTemplate transactionTemplate;
+    private final KafkaOrderProducer kafkaOrderProducer;
 
     @Override
     public OrderResponse placeOrder(OrderRequest request) {
@@ -64,22 +67,23 @@ public class FlashSaleServiceImpl implements FlashSaleService {
             return buildErrorResponse("Sản phẩm đã hết hàng", "OUT_OF_STOCK");
         }
 
-        // 3. Save DB
+        // 3. Publish to Kafka
         try {
-            log.debug("Persisting order to database for UserID: {}", request.getUserId());
-            Long orderId = createOrder(request);
-            log.info("Successfully persisted order to database with OrderID: {}", orderId);
+            log.debug("Publishing order event to Kafka for UserID: {}", request.getUserId());
+            
+            OrderEvent event = new OrderEvent(request.getUserId(), request.getProductId(), request.getQuantity());
+            kafkaOrderProducer.sendOrderEvent(event);
             
             return OrderResponse.builder()
                 .success(true)
-                .message("Đặt hàng thành công! Cảm ơn bạn đã tham gia Flash Sale")
-                .orderId(orderId)
+                .message("Đặt hàng thành công! Đơn hàng đang được xử lý.")
+                // Not returning orderId yet since it's processed async
                 .build();
         } catch (Exception e) {
-            log.error("Error persisting order to DB for UserID: {}, ProductID: {}. Rolling back Redis operations. Error details: {}", 
+            log.error("Error publishing order event to Kafka for UserID: {}, ProductID: {}. Rolling back Redis operations. Error details: {}", 
                       request.getUserId(), request.getProductId(), e.getMessage(), e);
             rollbackTransaction(stockKey, userLimitKey, request.getQuantity());
-            return buildErrorResponse("Có lỗi xảy ra, vui lòng thử lại", "SYSTEM_ERROR");
+            return buildErrorResponse("Có lỗi xảy ra khi gọi Kafka, vui lòng thử lại", "SYSTEM_ERROR");
         }
     }
 
@@ -127,18 +131,19 @@ public class FlashSaleServiceImpl implements FlashSaleService {
             .build();
     }
 
-    protected Long createOrder(OrderRequest request) {
+    @Override
+    public Long createOrder(Long userId, Long productId, Integer quantity) {
         return transactionTemplate.execute(status -> {
             // SELECT FOR UPDATE to prevent race condition at DB level
-            FlashSaleProduct product = productRepository.findByIdWithLock(request.getProductId())
-                .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại"));
+            FlashSaleProduct product = productRepository.findByIdWithLock(productId)
+                .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại ở DB: " + productId));
 
             Order order = Order.builder()
-                .userId(request.getUserId())
-                .productId(request.getProductId())
-                .quantity(request.getQuantity())
+                .userId(userId)
+                .productId(productId)
+                .quantity(quantity)
                 .salePrice(product.getSalePrice())
-                .status("PENDING")
+                .status("SUCCESS") // Đã trừ stock ở Redis thành công thì lưu DB là SUCCESS
                 .build();
 
             return orderRepository.save(order).getId();

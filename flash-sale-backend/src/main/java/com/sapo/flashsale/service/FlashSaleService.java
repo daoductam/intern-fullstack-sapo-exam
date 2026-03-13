@@ -9,4 +9,5 @@ import java.util.List;
 public interface FlashSaleService {
     OrderResponse placeOrder(OrderRequest request);
     List<FlashSaleProduct> getActiveProducts();
+    Long createOrder(Long userId, Long productId, Integer quantity);
 }

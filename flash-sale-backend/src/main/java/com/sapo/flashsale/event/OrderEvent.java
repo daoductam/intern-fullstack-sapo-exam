@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderEvent implements Serializable {
-    private String userId;
-    private String productId;
+    private Long userId;
+    private Long productId;
     private int quantity;
 }
