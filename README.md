@@ -1,5 +1,8 @@
 # Hệ Thống Flash Sale E-Commerce (Sapo Internship Exam)
 
+![Demo Flash Sale](https://raw.githubusercontent.com/daoductam/intern-fullstack-sapo-exam/main/flash-sale-frontend/public/vite.svg)
+*Minh hoạ giao diện săn siêu sale với Countdown timer và Stock Progress bar*
+
 Đây là tài liệu mô tả nghiệp vụ triển khai hệ thống **Flash Sale** (Bán hàng chớp nhoáng) cho một Sàn Thương mại Điện tử, với khả năng xử lý đồng thời hàng chục ngàn lượt truy cập (CCU).
 
 ## ⚠️ Giải Quyết 3 Bài Toán Cốt Lõi (Core Problems)
